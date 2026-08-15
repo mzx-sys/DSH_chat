@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "鲸鱼邮箱 · DeepSeek 聊天小助手",
+  "version": "0.1.0",
+  "description": "在 DeepSeek 等待 AI 回复时收到鲸鱼小伙伴发来的邮件，点开邮箱即可像微信一样聊天（小鲸娘/小鲸夜，可选智能回复）",
+  "icons": {
+    "128": "icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chat.deepseek.com/*",
+        "https://www.deepseek.com/*",
+        "http://127.0.0.1/*",
+        "http://localhost/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "host_permissions": [
+    "https://chat.deepseek.com/*",
+    "https://www.deepseek.com/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*",
+    "https://api.deepseek.com/*"
+  ]
+}
