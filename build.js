@@ -1,4 +1,4 @@
-﻿/* =====================================================================
+/* =====================================================================
  * build.js —— 一键生成两个可用的产物（内容源唯一：ds-whale-mailbox.user.js）
  *   1) preview.html      自包含预览页（内嵌脚本，双击即玩，无需安装）
  *   2) extension/        Chrome 扩展（免 Tampermonkey，开发者模式加载即可）
@@ -154,7 +154,9 @@ const manifest = {
   name: '鲸鱼邮箱 · DeepSeek 聊天小助手',
   version: '0.1.0',
   description: '在 DeepSeek 等待 AI 回复时收到鲸鱼小伙伴发来的邮件，点开邮箱即可像微信一样聊天（小鲸娘/小鲸夜，可选智能回复）',
-  icons: { 128: 'icon128.png' },
+  author: 'mzx-sys',
+  homepage_url: 'https://github.com/mzx-sys/DSH_chat',
+  icons: { 16: 'icon16.png', 32: 'icon32.png', 48: 'icon48.png', 128: 'icon128.png' },
   background: { service_worker: 'background.js' },
   content_scripts: [
     {
