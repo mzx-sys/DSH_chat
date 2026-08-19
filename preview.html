@@ -402,7 +402,8 @@
     const ch = getChar(charId);
     if (!ch) return '……';
     if (!ch.replies) {
-      // 自定义角色没有模板库：提示开启智能回复
+      // 自定义角色没有模板库：有兜底话术就用，否则提示开启智能回复
+      if (ch.fallback) return ch.fallback;
       const fbs = [
         '（' + ch.name + ' 挠了挠头）……想让我真正陪你聊天的话，去 ⚙️ 设置里开启「智能回复」吧~',
         '嗨~我是' + ch.name + '！开启智能回复后，我就能按你说的性格跟你聊天啦（⚙️ 设置）',
@@ -491,10 +492,13 @@
       elNode.style.background = charGradient(ch);
     }
   }
-  function addCustomChar(name, emoji, prompt) {
+  function addCustomChar(name, emoji, prompt, fallback) {
     charSeq++;
     const id = 'custom_' + charSeq + '_' + Math.random().toString(36).slice(2, 6);
-    const ch = { id: id, name: name || '新角色', emoji: emoji || '🐠', tagline: '自定义', prompt: prompt || '', gradient: null };
+    const ch = {
+      id: id, name: name || '新角色', emoji: emoji || '🐠', tagline: '自定义',
+      prompt: prompt || '', fallback: fallback || '', gradient: null
+    };
     settings.customChars.push(ch);
     state.convos[id] = { messages: [makeMsg('char', id, '嗨~我是' + ch.name + '！')], unread: 1 };
     if (!state.active) state.active = id;
@@ -580,6 +584,12 @@
     }
   }
 
+  function getEmailPool(charId, category) {
+    const ch = getChar(charId) || CHARACTERS.sister;
+    if (ch.emails && ch.emails[category] && ch.emails[category].length) return ch.emails[category];
+    return (ch.emails && ch.emails.generic) ? ch.emails.generic : [];
+  }
+
   function scheduleEmailFromAI(userText) {
     if (!state.enabled) return;
     const nowT = Date.now();
@@ -590,9 +600,16 @@
       if (!state.enabled) return;
       const charId = pick(['sister', 'brother']);
       const category = isGenerating() ? 'waiting' : detectEmailCategory(userText);
-      const ch = CHARACTERS[charId];
-      const pool = (ch.emails[category] && ch.emails[category].length) ? ch.emails[category] : ch.emails.generic;
-      deliverEmail(charId, pick(pool));
+      const pool = getEmailPool(charId, category);
+      // 智能回复开启时，邮件也由 AI 按场景生成；失败或未开启则退回模板
+      if (settings.smart && settings.apiKey && pool.length) {
+        generateSmartEmail(charId, userText, category).then(function (r) {
+          if (r && r.ok && r.text) deliverEmail(charId, r.text.trim());
+          else deliverEmail(charId, pick(pool));
+        });
+      } else {
+        deliverEmail(charId, pick(pool));
+      }
     }, delay);
   }
 
@@ -829,6 +846,7 @@
       '.dsm-set-char-prompt{resize:vertical;min-height:52px;border:1px solid var(--dsm-line);border-radius:8px;padding:6px 8px;font-size:11.5px;background:rgba(255,255,255,.5);color:var(--dsm-text);outline:none;line-height:1.5;}',
       '.dsm-dark .dsm-set-char-prompt{background:rgba(255,255,255,.07);}',
       '.dsm-set-char-prompt:focus{border-color:rgba(99,102,241,.6);}',
+      '.dsm-set-fallback{min-height:32px;font-size:11px;opacity:.85;}',
       '.dsm-set-del{font-size:11px;color:var(--dsm-sub);padding:2px 8px;border-radius:8px;border:1px solid var(--dsm-line);cursor:pointer;}',
       '.dsm-set-del:hover{color:#f43f5e;border-color:rgba(244,63,94,.5);}',
       '.dsm-set-inline{flex:1;min-width:0;border:1px solid var(--dsm-line);border-radius:8px;padding:5px 8px;font-size:12px;background:rgba(255,255,255,.5);color:var(--dsm-text);outline:none;}',
@@ -1086,12 +1104,14 @@
     // ---- 角色人设管理（可自定义性格/背景提示词，可新增角色） ----
     const secTitle = el('div', 'dsm-set-sec', '🎭 角色人设（性格 / 背景提示词）');
     const charsWrap = el('div', 'dsm-set-chars');
-    const promptTAs = []; // { id, ta }
-    const newRows = [];   // 新增角色表单行
+    const promptTAs = [];   // { id, ta }
+    const fallbackTAs = []; // { id, ta } 仅自定义角色
+    const newRows = [];     // 新增角色表单行
 
     function renderCharRows() {
       charsWrap.innerHTML = '';
       promptTAs.length = 0;
+      fallbackTAs.length = 0;
       getAllChars().forEach(function (ch) {
         const row = el('div', 'dsm-set-char');
         const head = el('div', 'dsm-set-char-head');
@@ -1112,8 +1132,16 @@
         ta.value = settings.charPrompts[ch.id] || charPrompt(ch.id);
         row.appendChild(head);
         row.appendChild(ta);
-        charsWrap.appendChild(row);
         promptTAs.push({ id: ch.id, ta: ta });
+        // 自定义角色额外提供「兜底话术」（没开智能回复时的回复）
+        if (!CHARACTERS[ch.id]) {
+          const fta = el('textarea', 'dsm-set-char-prompt dsm-set-fallback');
+          fta.placeholder = '💬 兜底话术（没开智能回复时，回这句；可留空）';
+          fta.value = ch.fallback || '';
+          row.appendChild(fta);
+          fallbackTAs.push({ id: ch.id, ta: fta });
+        }
+        charsWrap.appendChild(row);
       });
     }
 
@@ -1133,10 +1161,13 @@
       head.appendChild(cancel);
       const ta = el('textarea', 'dsm-set-char-prompt');
       ta.placeholder = '性格与背景提示词（如：你是海龟哥哥，稳重话不多，喜欢讲海底老故事…）';
+      const fta = el('textarea', 'dsm-set-char-prompt dsm-set-fallback');
+      fta.placeholder = '💬 兜底话术（没开智能回复时回这句，可留空）';
       row.appendChild(head);
       row.appendChild(ta);
+      row.appendChild(fta);
       charsWrap.appendChild(row);
-      const rec = { nameIn: nameIn, emojiIn: emojiIn, ta: ta };
+      const rec = { nameIn: nameIn, emojiIn: emojiIn, ta: ta, fta: fta };
       newRows.push(rec);
 
       function commit() {
@@ -1146,7 +1177,12 @@
           setTimeout(function () { status.textContent = ''; }, 2500);
           return;
         }
-        const ch = addCustomChar(name, String(emojiIn.value || '').trim() || '🐠', String(ta.value || '').trim());
+        const ch = addCustomChar(
+          name,
+          String(emojiIn.value || '').trim() || '🐠',
+          String(ta.value || '').trim(),
+          String(fta.value || '').trim()
+        );
         const i = newRows.indexOf(rec);
         if (i >= 0) newRows.splice(i, 1);
         saveSettings();
@@ -1186,13 +1222,23 @@
         const v = String(p.ta.value || '').trim();
         if (v) settings.charPrompts[p.id] = v;
       });
+      // 收集自定义角色兜底话术
+      fallbackTAs.forEach(function (f) {
+        const c = settings.customChars.find(function (x) { return x.id === f.id; });
+        if (c) c.fallback = String(f.ta.value || '').trim();
+      });
       // 收集新增角色
       const hadNewRows = newRows.length > 0;
       let addedId = null;
       newRows.forEach(function (r) {
         const name = String(r.nameIn.value || '').trim();
         if (!name) return;
-        const ch = addCustomChar(name, String(r.emojiIn.value || '').trim() || '🐠', String(r.ta.value || '').trim());
+        const ch = addCustomChar(
+          name,
+          String(r.emojiIn.value || '').trim() || '🐠',
+          String(r.ta.value || '').trim(),
+          String(r.fta.value || '').trim()
+        );
         addedId = ch.id;
       });
       newRows.length = 0;
@@ -1384,14 +1430,11 @@
   /* ---- 智能回复：调 DeepSeek 官方 API ----
    * 扩展版走 background（chrome.runtime 转发，绕开页面 CORS）；
    * 油猴/普通页面直接 fetch（可能被浏览器 CORS 拦截，失败则退回模板）。 */
-  function callSmartReply(charId, text, apiKey, model) {
+  const CONTEXT_TURNS = 10; // 多轮上下文：带上最近 10 条对话
+
+  function callApi(messages, apiKey, model) {
     const key = apiKey || settings.apiKey;
     const mdl = model || settings.model;
-    const ch = getChar(charId) || CHARACTERS.sister;
-    const messages = [
-      { role: 'system', content: charPrompt(charId) },
-      { role: 'user', content: text }
-    ];
     return new Promise(function (resolve) {
       let settled = false;
       const done = function (r) { if (!settled) { settled = true; resolve(r); } };
@@ -1428,6 +1471,45 @@
         done({ ok: false, error: String((e && e.message) || e) });
       }
     });
+  }
+
+  /* 构建多轮上下文消息：人设 + 最近对话 + 当前句 */
+  function buildSmartMessages(charId, text) {
+    const msgs = [{ role: 'system', content: charPrompt(charId) }];
+    const convo = state.convos[charId] || { messages: [] };
+    let history = convo.messages;
+    // 若最后一条正是当前要发的话，去掉避免重复
+    const last = history[history.length - 1];
+    if (last && last.from === 'user' && last.text === text) history = history.slice(0, -1);
+    history = history.slice(-CONTEXT_TURNS);
+    history.forEach(function (m) {
+      if (m.from === 'user') msgs.push({ role: 'user', content: m.text });
+      else if (m.from === 'char') msgs.push({ role: 'assistant', content: m.text });
+    });
+    msgs.push({ role: 'user', content: text });
+    return msgs;
+  }
+
+  function callSmartReply(charId, text, apiKey, model) {
+    return callApi(buildSmartMessages(charId, text), apiKey, model);
+  }
+
+  /* 智能邮件：等 AI 时按场景让角色发一条消息（智能回复开启时用） */
+  function generateSmartEmail(charId, userText, category) {
+    const ch = getChar(charId) || CHARACTERS.sister;
+    const scene = category === 'waiting'
+      ? '用户正在等待 AI 回复，等得有点无聊，正在等你（' + ch.name + '）发来一条消息。'
+      : '用户刚刚给 AI 发送了：「' + String(userText || '').slice(0, 80) + '」，正在等待回复。';
+    const messages = [
+      {
+        role: 'system',
+        content: charPrompt(charId) +
+          '\n现在请你以' + ch.name + '的身份，主动给用户发一条简短的「邮件」消息，' +
+          '内容要贴合当前场景，语气完全符合你的人设，不超过 60 字，可以带 emoji。'
+      },
+      { role: 'user', content: scene + '请直接发消息内容，不要解释。' }
+    ];
+    return callApi(messages);
   }
 
   function sendUserMessage(text) {
@@ -1608,6 +1690,8 @@
       getChar: getChar,
       charPrompt: charPrompt,
       addCustomChar: addCustomChar,
+      generateReply: generateReply,
+      buildSmartMessages: buildSmartMessages,
       deliverEmail: deliverEmail,
       scheduleEmail: scheduleEmailFromAI,
       openPanel: openPanel,

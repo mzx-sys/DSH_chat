@@ -108,12 +108,24 @@ mb.deliverEmail('brother', '发给非当前角色的邮件');
 assert(mb.state.convos.brother.unread >= 3, '发给非当前角色照常计未读');
 
 // 自定义角色：新增 → 出现在列表 → 会话可用
-const turtle = mb.addCustomChar('海龟哥哥', '🐢', '你是海龟哥哥，稳重话不多，喜欢讲海底老故事');
+const turtle = mb.addCustomChar('海龟哥哥', '🐢', '你是海龟哥哥，稳重话不多，喜欢讲海底老故事', '小兄弟，别急，慢慢来。');
 assert(!!turtle && !!turtle.id, '自定义角色创建成功');
 assert(mb.getChars().length === 3, '角色列表含自定义角色（3个）');
 assert(!!mb.getChar(turtle.id), 'getChar 能查到自定义角色');
 assert(!!mb.state.convos[turtle.id], '自定义角色有独立会话');
 assert(mb.charPrompt(turtle.id).indexOf('海龟哥哥') !== -1, '自定义角色提示词生效');
+assert(turtle.fallback === '小兄弟，别急，慢慢来。', '自定义角色兜底话术已保存');
+assert(mb.generateReply(turtle.id, '你好') === '小兄弟，别急，慢慢来。', '无智能回复时用兜底话术回复');
 mb.deliverEmail(turtle.id, '来自海龟哥哥的消息');
 assert(mb.state.convos[turtle.id].messages.length >= 2, '自定义角色可收消息');
+
+// 多轮上下文：对话历史应包含最近消息，且当前消息不重复
+mb.state.convos.sister.messages.push({ id: 'x1', from: 'char', charId: 'sister', text: '上一条鲸鱼说的话', time: Date.now() });
+mb.state.convos.sister.messages.push({ id: 'x2', from: 'user', charId: 'sister', text: '你记得上一条吗', time: Date.now() });
+const msgs = mb.buildSmartMessages('sister', '你记得上一条吗');
+const hasHistory = msgs.some(function (m) { return m.role === 'assistant' && m.content === '上一条鲸鱼说的话'; });
+assert(hasHistory, '多轮上下文包含历史对话');
+assert(msgs[msgs.length - 1].content === '你记得上一条吗', '多轮上下文最后一条是当前消息');
+const dup = msgs.filter(function (m) { return m.role === 'user' && m.content === '你记得上一条吗'; }).length;
+assert(dup === 1, '当前消息不重复');
 console.log('冒烟测试完成');
