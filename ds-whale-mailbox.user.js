@@ -338,6 +338,16 @@
     return 'generic';
   }
 
+  /* 日常聊天感：模板模式下偶尔补一句「反问」或「碎碎念」，让对话能继续 */
+  const QUESTION_POOLS = {
+    sister: ['哥哥你呢？', '你呢你呢~', '哥哥今天过得怎么样呀？', '要不要陪鲸鱼妹妹聊会儿天？', '哥哥有什么开心的事吗？', '那哥哥呢？', '嘿嘿，那你呢？'],
+    brother: ['你呢？', '你咋想的？', '所以你怎么看？', '嘿嘿，你猜？', '那你呢，兄弟？', '换你说了，说说看？', '你呢你呢？']
+  };
+  const FILLER_POOLS = {
+    sister: ['对了，哥哥吃饭了没呀~', '嘿嘿，其实我一直在等你呢', '说起来，我今天看到一只超大的水母！', '嗯嗯，我懂我懂~', '哥哥继续说，我爱听~'],
+    brother: ['对了，你今天碰见啥好玩的事没？', '说真的，这 AI 回答得还行吧？', '嘿嘿，我刚刚去吓唬了一只螃蟹', '行吧，反正我信你', '接着说接着说，我听着呢']
+  };
+
   function generateReply(charId, text) {
     const ch = getChar(charId);
     if (!ch) return '……';
@@ -353,7 +363,18 @@
     }
     const intent = detectIntent(text);
     const pool = (ch.replies[intent] && ch.replies[intent].length) ? ch.replies[intent] : ch.replies.fallback;
-    return pick(pool);
+    let reply = pick(pool);
+    // 日常感①：偶尔拆成两条短消息，像微信一样分开发
+    const filler = FILLER_POOLS[charId];
+    if (filler && Math.random() < 0.14 && reply.length < 28) {
+      reply += '\n' + pick(filler);
+    }
+    // 日常感②：偶尔反问一句，让对话继续（道别时不反问）
+    const qs = QUESTION_POOLS[charId];
+    if (qs && intent !== 'bye' && Math.random() < 0.35 && !/[？?]$/.test(reply.split('\n')[0])) {
+      reply += (reply.indexOf('\n') >= 0 ? '\n' : ' ') + pick(qs);
+    }
+    return reply;
   }
 
   /* ============================ 状态与存储 ============================ */
@@ -1585,9 +1606,12 @@
     });
   }
 
-  /* 构建多轮上下文消息：人设 + 最近对话 + 当前句 */
+  /* 聊天风格指令：让回复像微信日常聊天（多条短消息 + 主动反问） */
+  const SMART_STYLE = '\n\n【聊天方式】像微信日常聊天：1) 回复通常分成 1~3 条短消息，每条一句话、一般不超过 25 字，每条单独一行（用换行分隔）；2) 不要总是长篇大论一口气说完；3) 不要只顾回答，要主动一点——大约一半的回复要以一个问题结尾或反问对方，让对话能继续下去；4) 始终符合你的人物设定语气。';
+
+  /* 构建多轮上下文消息：人设 + 聊天风格 + 最近对话 + 当前句 */
   function buildSmartMessages(charId, text) {
-    const msgs = [{ role: 'system', content: charPrompt(charId) }];
+    const msgs = [{ role: 'system', content: charPrompt(charId) + SMART_STYLE }];
     const convo = state.convos[charId] || { messages: [] };
     let history = convo.messages;
     // 若最后一条正是当前要发的话，去掉避免重复
@@ -1624,6 +1648,24 @@
     return callApi(messages);
   }
 
+  /* 多条发送：回复含换行时按行拆成短消息，间隔发出（更像微信日常聊天） */
+  function deliverMulti(charId, reply) {
+    const parts = String(reply).split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!parts.length) parts.push(String(reply));
+    if (parts.length > 4) {
+      // 最多 4 条，多出来的合并进最后一条
+      parts.splice(3, parts.length - 3, parts.slice(3).join('\n'));
+    }
+    parts.forEach(function (p, i) {
+      setTimeout(function () {
+        if (!state.enabled) return;
+        pushMessage(charId, 'char', p);
+        save();
+        renderChat();
+      }, i * 500);
+    });
+  }
+
   function sendUserMessage(text) {
     const charId = state.active;
     pushMessage(charId, 'user', text);
@@ -1631,28 +1673,28 @@
     renderChat();
     state.typingChar = charId;
     renderChat();
-    const finish = function (reply) {
-      pushMessage(charId, 'char', reply);
+    const doneReply = function (reply) {
       state.typingChar = null;
       save();
       renderChat();
+      deliverMulti(charId, reply);
     };
     if (settings.smart && settings.apiKey) {
       const t0 = Date.now();
       callSmartReply(charId, text).then(function (r) {
         if (r.ok && r.text) {
           const wait = Math.max(0, 900 - (Date.now() - t0));
-          setTimeout(function () { finish(r.text.trim()); }, wait);
+          setTimeout(function () { doneReply(r.text.trim()); }, wait);
         } else {
           if (!smartWarned) {
             smartWarned = true;
             showToast('⚠️ 智能回复没连上，先退回模板聊天：' + r.error);
           }
-          setTimeout(function () { finish(generateReply(charId, text)); }, randInt(700, 1900));
+          setTimeout(function () { doneReply(generateReply(charId, text)); }, randInt(700, 1900));
         }
       });
     } else {
-      setTimeout(function () { finish(generateReply(charId, text)); }, randInt(700, 1900));
+      setTimeout(function () { doneReply(generateReply(charId, text)); }, randInt(700, 1900));
     }
   }
 
