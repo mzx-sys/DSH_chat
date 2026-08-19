@@ -737,8 +737,8 @@
       '#dsm-root *,#dsm-root *::before,#dsm-root *::after{box-sizing:border-box;margin:0;padding:0;}',
       '#dsm-root button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit;}',
       '#dsm-root textarea{font-family:inherit;}',
-      '#dsm-root{--dsm-glass:rgba(255,255,255,.6);--dsm-text:#20242e;--dsm-sub:#767d92;--dsm-line:rgba(255,255,255,.75);--dsm-accent:#6366f1;--dsm-accent2:#22d3ee;--dsm-bubble-user:linear-gradient(135deg,#34d399,#22d3ee);--dsm-bubble-user-text:#ffffff;--dsm-bubble-char:rgba(255,255,255,.78);--dsm-bubble-char-text:#20242e;--dsm-shadow:0 14px 44px rgba(31,38,70,.2);--dsm-avatar-user:linear-gradient(135deg,#a5b4fc,#818cf8);}',
-      '#dsm-root.dsm-dark{--dsm-glass:rgba(30,33,42,.62);--dsm-text:#eef0f6;--dsm-sub:#9aa1b5;--dsm-line:rgba(255,255,255,.13);--dsm-bubble-char:rgba(255,255,255,.1);--dsm-bubble-char-text:#eef0f6;--dsm-shadow:0 14px 44px rgba(0,0,0,.55);}',
+      '#dsm-root{--dsm-glass:rgba(255,255,255,.6);--dsm-text:#20242e;--dsm-sub:#767d92;--dsm-line:rgba(255,255,255,.75);--dsm-accent:#6366f1;--dsm-accent2:#22d3ee;--dsm-bubble-user:linear-gradient(135deg,#34d399,#22d3ee);--dsm-bubble-user-text:#ffffff;--dsm-bubble-char:rgba(255,255,255,.78);--dsm-bubble-char-text:#20242e;--dsm-shadow:0 14px 44px rgba(31,38,70,.2);--dsm-avatar-user:linear-gradient(135deg,#a5b4fc,#818cf8);--dsm-fade:rgba(255,255,255,.8);}',
+      '#dsm-root.dsm-dark{--dsm-glass:rgba(30,33,42,.62);--dsm-text:#eef0f6;--dsm-sub:#9aa1b5;--dsm-line:rgba(255,255,255,.13);--dsm-bubble-char:rgba(255,255,255,.1);--dsm-bubble-char-text:#eef0f6;--dsm-shadow:0 14px 44px rgba(0,0,0,.55);--dsm-fade:rgba(28,31,40,.8);}',
 
       /* 悬浮图标（毛玻璃圆钮） */
       '.dsm-dock{position:fixed;right:14px;display:flex;flex-direction:column;gap:12px;align-items:center;cursor:grab;user-select:none;touch-action:none;}',
@@ -747,7 +747,8 @@
       '.dsm-btn:active{transform:scale(.95);}',
       '.dsm-btn.dsm-dim{opacity:.45;}',
       '.dsm-btn.dsm-active{box-shadow:0 0 0 2.5px var(--dsm-accent),0 8px 24px rgba(99,102,241,.4);}',
-      '.dsm-badge{position:absolute;top:-3px;right:-3px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:linear-gradient(135deg,#f43f5e,#fb7185);color:#fff;font-size:11px;font-weight:700;display:none;align-items:center;justify-content:center;box-shadow:0 0 0 2px rgba(255,255,255,.95),0 4px 10px rgba(244,63,94,.45);}',
+      '.dsm-badge{position:absolute;top:-3px;right:-3px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:linear-gradient(135deg,#f43f5e,#fb7185);color:#fff;font-size:11px;font-weight:700;display:none;align-items:center;justify-content:center;box-shadow:0 0 0 2px rgba(255,255,255,.95),0 4px 10px rgba(244,63,94,.45);animation:dsmPop .3s ease-out;}',
+      '@keyframes dsmPop{0%{transform:scale(.5);}60%{transform:scale(1.2);}100%{transform:scale(1);}}',
       '.dsm-switch{width:34px;height:19px;border-radius:10px;background:rgba(0,0,0,.16);position:relative;transition:background .25s;}',
       '.dsm-switch::after{content:"";position:absolute;top:2.5px;left:2.5px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 2px 5px rgba(0,0,0,.28);}',
       '.dsm-btn.dsm-on .dsm-switch{background:linear-gradient(90deg,var(--dsm-accent),var(--dsm-accent2));}',
@@ -766,9 +767,14 @@
       '.dsm-sub{font-size:11px;color:var(--dsm-sub);flex:1;}',
       '.dsm-close{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--dsm-sub);font-size:12px;flex:none;background:rgba(255,255,255,.35);border:1px solid var(--dsm-line);}',
       '.dsm-close:hover{background:rgba(255,255,255,.65);color:var(--dsm-text);}',
-      '.dsm-contacts{position:relative;z-index:1;display:flex;gap:8px;padding:4px 14px 12px;overflow-x:auto;scrollbar-width:thin;}',
+      '.dsm-contacts-wrap{position:relative;z-index:1;margin-top:4px;}',
+      '.dsm-contacts{position:relative;display:flex;gap:8px;padding:4px 14px 12px;overflow-x:auto;scrollbar-width:thin;}',
       '.dsm-contacts::-webkit-scrollbar{height:4px;}',
       '.dsm-contacts::-webkit-scrollbar-thumb{background:rgba(120,130,160,.4);border-radius:2px;}',
+      '.dsm-fade{position:absolute;top:0;bottom:12px;width:20px;pointer-events:none;opacity:0;transition:opacity .2s;z-index:3;}',
+      '.dsm-fade-l{left:0;background:linear-gradient(to right,var(--dsm-fade),transparent);}',
+      '.dsm-fade-r{right:0;background:linear-gradient(to left,var(--dsm-fade),transparent);}',
+      '.dsm-fade.dsm-show{opacity:1;}',
       '.dsm-contact{flex:1 0 140px;display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:14px;cursor:pointer;background:rgba(255,255,255,.28);border:1px solid transparent;transition:background .15s,border .15s,box-shadow .15s;}',
       '.dsm-contact:hover{background:rgba(255,255,255,.55);}',
       '.dsm-contact.dsm-active{border-color:rgba(99,102,241,.6);background:rgba(255,255,255,.65);box-shadow:0 4px 14px rgba(99,102,241,.22);}',
@@ -786,6 +792,8 @@
 
       '.dsm-chat{position:relative;z-index:1;display:flex;flex-direction:column;flex:1;min-height:0;margin:0 10px 12px;background:rgba(255,255,255,.18);border:1px solid var(--dsm-line);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}',
       '.dsm-chat-head{padding:12px 14px 10px;font-size:12px;color:var(--dsm-sub);border-bottom:1px solid var(--dsm-line);display:flex;gap:6px;align-items:center;border-radius:18px 18px 0 0;}',
+      '.dsm-chat-export{flex:none;font-size:13px;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--dsm-sub);background:rgba(255,255,255,.3);border:1px solid var(--dsm-line);}',
+      '.dsm-chat-export:hover{color:var(--dsm-text);background:rgba(255,255,255,.6);}',
       '.dsm-input-row{display:flex;gap:8px;align-items:flex-end;padding:10px 14px 22px;border-top:1px solid var(--dsm-line);border-radius:0 0 18px 18px;background:rgba(255,255,255,.12);}',
       '.dsm-dark .dsm-input-row{background:rgba(255,255,255,.03);}',
       '.dsm-msgs{flex:1;min-height:0;overflow-y:auto;padding:16px 14px 20px;display:flex;flex-direction:column;gap:10px;}',
@@ -793,6 +801,8 @@
       '.dsm-msgs::-webkit-scrollbar-thumb{background:rgba(120,130,160,.35);border-radius:3px;}',
       '.dsm-day{text-align:center;font-size:10.5px;color:var(--dsm-sub);margin:2px 0;}',
       '.dsm-msg{display:flex;gap:8px;align-items:flex-start;max-width:94%;}',
+      '.dsm-msg:last-child{animation:dsmMsgIn .2s ease-out;}',
+      '@keyframes dsmMsgIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}',
       '.dsm-msg-user{align-self:flex-end;flex-direction:row-reverse;}',
       '.dsm-bubble-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex:none;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6);}',
       '.dsm-msg-user .dsm-bubble-avatar{background:var(--dsm-avatar-user);}',
@@ -837,7 +847,13 @@
       '.dsm-dark .dsm-set-btn.dsm-set-ghost{background:rgba(255,255,255,.1);}',
       '.dsm-set-status{font-size:11.5px;color:var(--dsm-sub);min-height:16px;word-break:break-all;line-height:1.6;}',
       '.dsm-set-hint{font-size:11px;color:var(--dsm-sub);line-height:1.7;}',
-      '.dsm-set-sec{font-size:12px;font-weight:700;color:var(--dsm-sub);margin-top:4px;border-top:1px solid var(--dsm-line);padding-top:10px;}',
+      '.dsm-set-section{display:flex;flex-direction:column;}',
+      '.dsm-set-sec-head{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--dsm-sub);margin-top:2px;border-top:1px solid var(--dsm-line);padding-top:10px;cursor:pointer;user-select:none;}',
+      '.dsm-set-sec-title{flex:1;}',
+      '.dsm-set-chevron{font-size:9px;transition:transform .2s;color:var(--dsm-accent);}',
+      '.dsm-set-sec-head.dsm-collapsed .dsm-set-chevron{transform:rotate(-90deg);}',
+      '.dsm-set-collapsible{display:flex;flex-direction:column;gap:12px;padding-top:10px;}',
+      '.dsm-set-collapsible.dsm-hide{display:none;}',
       '.dsm-set-chars{display:flex;flex-direction:column;gap:8px;}',
       '.dsm-set-char{border:1px solid var(--dsm-line);border-radius:12px;padding:8px 10px;background:rgba(255,255,255,.25);display:flex;flex-direction:column;gap:6px;}',
       '.dsm-dark .dsm-set-char{background:rgba(255,255,255,.05);}',
@@ -852,6 +868,8 @@
       '.dsm-set-inline{flex:1;min-width:0;border:1px solid var(--dsm-line);border-radius:8px;padding:5px 8px;font-size:12px;background:rgba(255,255,255,.5);color:var(--dsm-text);outline:none;}',
       '.dsm-dark .dsm-set-inline{background:rgba(255,255,255,.07);}',
       '.dsm-set-emoji{flex:none;width:52px;text-align:center;}',
+      '.dsm-set-eye{flex:none;width:30px;height:30px;border-radius:9px;border:1px solid var(--dsm-line);background:rgba(255,255,255,.35);color:var(--dsm-text);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;}',
+      '.dsm-dark .dsm-set-eye{background:rgba(255,255,255,.07);}',
       '.dsm-set-add{height:32px;font-size:12px;border:1px dashed rgba(99,102,241,.55);background:rgba(99,102,241,.08);color:var(--dsm-accent);box-shadow:none;}',
       '.dsm-set-confirm{flex:none;height:26px;padding:0 12px;border-radius:9px;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#6366f1,#22d3ee);box-shadow:0 2px 8px rgba(99,102,241,.35);cursor:pointer;}',
 
@@ -867,7 +885,7 @@
 
   /* ============================ DOM 引用 ============================ */
   let root, dock, mailBtn, badgeEl, toggleBtn, panelEl, msgsEl, inputEl, sendBtn, toastEl;
-  let contactsEl = null;
+  let contactsEl = null, contactsFadeL = null, contactsFadeR = null;
   let settingsPane = null, smartSwitch = null, keyInput = null, modelSelect = null;
   let panelOpen = false;
   const contactCards = {};
@@ -1003,11 +1021,19 @@
     head.appendChild(settingsBtn);
     head.appendChild(closeBtn);
 
-    // 联系人栏（性格选择，含自定义角色）
+    // 联系人栏（性格选择，含自定义角色，可横向滚动 + 渐变提示）
+    const contactsWrap = el('div', 'dsm-contacts-wrap');
     contactsEl = el('div', 'dsm-contacts');
+    contactsFadeL = el('div', 'dsm-fade dsm-fade-l');
+    contactsFadeR = el('div', 'dsm-fade dsm-fade-r');
+    contactsEl.addEventListener('scroll', updateContactFades);
     getAllChars().forEach(function (ch) {
       contactsEl.appendChild(createContactCard(ch.id));
     });
+    contactsWrap.appendChild(contactsEl);
+    contactsWrap.appendChild(contactsFadeL);
+    contactsWrap.appendChild(contactsFadeR);
+    updateContactFades();
 
     // 聊天区
     const chat = el('div', 'dsm-chat');
@@ -1027,7 +1053,7 @@
     chat.appendChild(inputRow);
 
     panelEl.appendChild(head);
-    panelEl.appendChild(contactsEl);
+    panelEl.appendChild(contactsWrap);
     panelEl.appendChild(chat);
     buildSettings(settingsBtn);
     root.appendChild(panelEl);
@@ -1052,7 +1078,7 @@
     settingsPane = el('div', 'dsm-settings');
 
     const titleRow = el('div', 'dsm-set-title-row');
-    titleRow.appendChild(el('div', 'dsm-set-title', '⚙️ 智能回复设置'));
+    titleRow.appendChild(el('div', 'dsm-set-title', '⚙️ 设置'));
     const setClose = el('button', 'dsm-set-close', '✕');
     setClose.title = '关闭设置';
     setClose.addEventListener('click', function () {
@@ -1072,14 +1098,22 @@
     });
     rowSmart.appendChild(smartSwitch);
 
-    // API Key
+    // API Key（带显示/隐藏小眼睛）
     const rowKey = el('div', 'dsm-set-row');
     rowKey.appendChild(el('span', 'dsm-set-label', 'DeepSeek API Key'));
     keyInput = el('input', 'dsm-set-input');
     keyInput.type = 'password';
     keyInput.placeholder = 'sk-...（platform.deepseek.com 获取）';
     keyInput.value = settings.apiKey || '';
+    const eyeBtn = el('button', 'dsm-set-eye', '👁');
+    eyeBtn.title = '显示 / 隐藏';
+    eyeBtn.addEventListener('click', function () {
+      const show = keyInput.type === 'password';
+      keyInput.type = show ? 'text' : 'password';
+      eyeBtn.textContent = show ? '🙈' : '👁';
+    });
     rowKey.appendChild(keyInput);
+    rowKey.appendChild(eyeBtn);
 
     // 模型选择
     const rowModel = el('div', 'dsm-set-row');
@@ -1102,7 +1136,6 @@
       '💡 API Key 只保存在本机浏览器，直接调用 DeepSeek 官方接口（api.deepseek.com），不经任何第三方。没填 Key 或调用失败时，自动退回模板聊天。');
 
     // ---- 角色人设管理（可自定义性格/背景提示词，可新增角色） ----
-    const secTitle = el('div', 'dsm-set-sec', '🎭 角色人设（性格 / 背景提示词）');
     const charsWrap = el('div', 'dsm-set-chars');
     const promptTAs = [];   // { id, ta }
     const fallbackTAs = []; // { id, ta } 仅自定义角色
@@ -1273,16 +1306,111 @@
       });
     });
 
+    // 可折叠分区
+    function makeSection(titleText, children) {
+      const head = el('div', 'dsm-set-sec-head');
+      head.appendChild(el('span', 'dsm-set-chevron', '▼'));
+      head.appendChild(el('span', 'dsm-set-sec-title', titleText));
+      const body = el('div', 'dsm-set-collapsible');
+      children.forEach(function (c) { body.appendChild(c); });
+      let open = true;
+      head.addEventListener('click', function () {
+        open = !open;
+        body.classList.toggle('dsm-hide', !open);
+        head.classList.toggle('dsm-collapsed', !open);
+      });
+      const wrap = el('div', 'dsm-set-section');
+      wrap.appendChild(head);
+      wrap.appendChild(body);
+      return wrap;
+    }
+
+    /* ---- 角色设置导出 / 导入 ---- */
+    function exportSettings() {
+      try {
+        const data = {
+          app: 'whale-mailbox',
+          version: CONFIG.version,
+          exportedAt: new Date().toISOString(),
+          charPrompts: settings.charPrompts || {},
+          customChars: (settings.customChars || []).map(function (c) {
+            return { name: c.name, emoji: c.emoji, prompt: c.prompt, fallback: c.fallback };
+          }),
+          smart: settings.smart,
+          model: settings.model
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = el('a');
+        a.href = url;
+        a.download = 'whale-mailbox-roles-' + new Date().toISOString().slice(0, 10) + '.json';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(url); if (a.remove) a.remove(); }, 500);
+        status.textContent = '✅ 已导出角色设置（不含 API Key）';
+      } catch (e) {
+        status.textContent = '❌ 导出失败：' + e.message;
+      }
+    }
+
+    function importSettings(file) {
+      const reader = new FileReader();
+      reader.onload = function () {
+        try {
+          const data = JSON.parse(reader.result);
+          if (!data || data.app !== 'whale-mailbox' || !Array.isArray(data.customChars)) {
+            throw new Error('不是有效的鲸鱼邮箱角色文件');
+          }
+          // 内置角色的人设覆盖
+          if (data.charPrompts && typeof data.charPrompts === 'object') {
+            Object.keys(data.charPrompts).forEach(function (id) {
+              if (CHARACTERS[id]) settings.charPrompts[id] = data.charPrompts[id];
+            });
+          }
+          // 自定义角色（重新分配 id 避免冲突）
+          let n = 0;
+          data.customChars.forEach(function (c) {
+            if (!c || !c.name) return;
+            addCustomChar(String(c.name), String(c.emoji || '🐠'), String(c.prompt || ''), String(c.fallback || ''));
+            n++;
+          });
+          if (data.model) settings.model = data.model;
+          if (typeof data.smart === 'boolean') settings.smart = data.smart;
+          saveSettings();
+          save();
+          renderCharRows();
+          renderContacts();
+          if (panelOpen) renderChat();
+          status.textContent = '✅ 导入成功：' + n + ' 个角色';
+        } catch (e) {
+          status.textContent = '❌ 导入失败：' + e.message;
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    const transferBtns = el('div', 'dsm-set-btns');
+    const exportBtn = el('button', 'dsm-set-btn dsm-set-ghost', '📤 导出角色');
+    const importBtn = el('button', 'dsm-set-btn dsm-set-ghost', '📥 导入角色');
+    const fileInput = el('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json,application/json';
+    fileInput.style.display = 'none';
+    fileInput.addEventListener('change', function () {
+      if (fileInput.files && fileInput.files[0]) importSettings(fileInput.files[0]);
+      fileInput.value = '';
+    });
+    exportBtn.addEventListener('click', exportSettings);
+    importBtn.addEventListener('click', function () { fileInput.click(); });
+    transferBtns.appendChild(exportBtn);
+    transferBtns.appendChild(importBtn);
+
+    const sec1 = makeSection('⚙️ 智能回复（API）', [rowSmart, rowKey, rowModel, btns, status, hint]);
+    const sec2 = makeSection('🎭 角色人设（性格 / 背景 / 兜底）', [charsWrap, addBtn, transferBtns]);
+
     settingsPane.appendChild(titleRow);
-    settingsPane.appendChild(rowSmart);
-    settingsPane.appendChild(rowKey);
-    settingsPane.appendChild(rowModel);
-    settingsPane.appendChild(btns);
-    settingsPane.appendChild(status);
-    settingsPane.appendChild(hint);
-    settingsPane.appendChild(secTitle);
-    settingsPane.appendChild(charsWrap);
-    settingsPane.appendChild(addBtn);
+    settingsPane.appendChild(sec1);
+    settingsPane.appendChild(sec2);
     panelEl.appendChild(settingsPane);
 
     settingsBtn.addEventListener('click', function () {
@@ -1322,6 +1450,7 @@
     mailBtn.classList.add('dsm-active');
     clearUnread(state.active);
     renderChat();
+    try { if (inputEl) inputEl.focus(); } catch (e) {}
   }
   function closePanel() {
     if (!panelOpen) return;
@@ -1334,6 +1463,17 @@
   }
 
   /* ============================ 渲染 ============================ */
+  /* 联系人栏左右渐变提示：能往哪边滑就显示哪边 */
+  function updateContactFades() {
+    try {
+      if (!contactsEl || !contactsFadeL || !contactsFadeR) return;
+      const canL = contactsEl.scrollLeft > 4;
+      const canR = contactsEl.scrollLeft < contactsEl.scrollWidth - contactsEl.clientWidth - 4;
+      contactsFadeL.classList.toggle('dsm-show', canL);
+      contactsFadeR.classList.toggle('dsm-show', canR);
+    } catch (e) {}
+  }
+
   function renderContacts() {
     getAllChars().forEach(function (ch) {
       let card = contactCards[ch.id];
@@ -1355,6 +1495,35 @@
       unreadEl.classList.toggle('dsm-has', n > 0);
       card.classList.toggle('dsm-active', state.active === ch.id);
     });
+    updateContactFades();
+  }
+
+  /* 导出当前角色的聊天记录为 Markdown */
+  function exportChat() {
+    try {
+      const charId = state.active;
+      const ch = getChar(charId) || CHARACTERS.sister;
+      const convo = state.convos[charId] || { messages: [] };
+      const p2 = function (n) { return String(n).padStart(2, '0'); };
+      const lines = ['# 与小鲸娘的聊天记录', '', '角色：' + ch.name, '导出时间：' + new Date().toLocaleString(), ''];
+      convo.messages.forEach(function (m) {
+        const d = new Date(m.time);
+        const who = m.from === 'user' ? '你' : ch.name;
+        const ts = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+        lines.push('**' + ts + ' ' + who + '**：' + m.text);
+        lines.push('');
+      });
+      const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = el('a');
+      a.href = url;
+      a.download = '聊天记录-' + ch.name + '-' + new Date().toISOString().slice(0, 10) + '.md';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); if (a.remove) a.remove(); }, 500);
+    } catch (e) {
+      showToast('❌ 导出失败：' + e.message);
+    }
   }
 
   function renderChat() {
@@ -1369,6 +1538,10 @@
     const hint = el('span', 'dsm-sub', ch.hint || '');
     hint.style.flex = '1';
     chatHead.appendChild(hint);
+    const exportBtn = el('button', 'dsm-close dsm-chat-export', '📤');
+    exportBtn.title = '导出聊天记录';
+    exportBtn.addEventListener('click', exportChat);
+    chatHead.appendChild(exportBtn);
 
     inputEl.placeholder = '和' + ch.name + '说点什么…（Enter 发送）';
 
@@ -1600,6 +1773,7 @@
     if (root) { try { root.remove(); } catch (e) {} }
     root = null; dock = null; mailBtn = null; badgeEl = null; toggleBtn = null;
     panelEl = null; msgsEl = null; inputEl = null; sendBtn = null; toastEl = null;
+    contactsEl = null; contactsFadeL = null; contactsFadeR = null;
     Object.keys(contactCards).forEach(function (k) { delete contactCards[k]; });
     panelOpen = false;
     buildRoot();
@@ -1660,6 +1834,10 @@
           closePanel();
         }
       }
+    });
+    // 窗口缩放后面板重新定位
+    window.addEventListener('resize', function () {
+      if (panelOpen) positionPanel();
     });
   }
 
