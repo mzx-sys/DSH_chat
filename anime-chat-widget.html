@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>🌸 二次元聊天窗</title>
+<style>
+  /* ============================================================
+   * 二次元风格变量
+   * ============================================================ */
+  :root {
+    --safe-pad: 14px;               /* ★修复①/②/③：内容与窗口内壁的安全距离 */
+    --window-radius: 22px;          /* ★修复①：窗口圆角（越大越可爱，但内边距也要跟着加大） */
+    --radius-guard: 24px;           /* ★修复②：标题栏内边距 ≥ 窗口圆角，内容不进圆角区 */
+    --input-radius: 22px;           /* ★修复①：输入框大圆角 */
+    --bubble-radius: 18px;          /* 气泡圆角 */
+    --user-bubble: linear-gradient(135deg, #8af09a, #3fd76a);  /* 用户气泡·绿 */
+    --ai-bubble: #ffffff;           /* AI 气泡·白 */
+    --text: #5a5270;
+    --text-sub: #a69fbe;
+    --pink: #ff9ecb;
+    --purple: #b6a6ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(160deg, #ffe9f4, #f0eaff 50%, #dff3ff);
+  }
+
+  /* ============ 窗口骨架：flex 三段式（顶部tab / 中间滚动 / 底部输入） ============ */
+  .window {
+    width: min(400px, 100vw);
+    /* ★修复⑤（软键盘）：用动态视口高度 + JS visualViewport，键盘弹出时窗口收缩，输入框不被遮挡 */
+    height: min(720px, 100dvh);
+    display: flex;
+    flex-direction: column;          /* 三段式布局的根 */
+    border: 2px solid rgba(255,255,255,.9);
+    border-radius: var(--window-radius);
+    overflow: hidden;                /* 让窗口背景渐变跟随圆角 —— 但内部各区都留了安全距离，不会裁到内容（见修复①/②/③） */
+    box-shadow: 0 18px 60px rgba(140,110,200,.35);
+    background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(245,240,255,.85));
+  }
+
+  /* ============ ① 标题栏 ============ */
+  .titlebar {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 10px;
+    /* ★修复②：横向内边距 ≥ 窗口圆角(24 ≥ 22)，标题/关闭按钮不会被窗口顶部圆角切掉 */
+    padding: 12px var(--radius-guard);
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: #fff;
+  }
+  .title { font-weight: 700; font-size: 15px; flex: 1; }
+  .close {
+    width: 26px; height: 26px; border: none; border-radius: 50%;
+    background: rgba(255,255,255,.25); color: #fff; cursor: pointer; font-size: 12px;
+  }
+  .close:active { transform: scale(.92); }
+
+  /* ============ ② 顶部角色 Tab（★修复②：卡片圆角不被窗口切掉） ============ */
+  .tabs {
+    flex: 0 0 auto;
+    display: flex; gap: 10px;
+    /* ★修复②关键：容器左右 padding = 安全距离，卡片整体内缩，圆角完整展示 */
+    padding: 10px var(--safe-pad);
+    overflow-x: auto;               /* 角色多时可横向滚动 */
+    scrollbar-width: none;
+    background: rgba(255,255,255,.5);
+    border-bottom: 1px solid rgba(255,255,255,.7);
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 0 0 auto;
+    padding: 8px 16px;
+    border-radius: 14px;            /* 卡片自己的圆角 */
+    background: #fff;
+    color: var(--text);
+    font-size: 13px; font-weight: 600;
+    box-shadow: 0 2px 8px rgba(140,110,200,.15);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform .15s;
+  }
+  .tab.active { background: linear-gradient(135deg, var(--pink), var(--purple)); color: #fff; }
+  .tab:active { transform: scale(.95); }
+
+  /* ============ ③ 聊天滚动区（★修复③：消息与窗口左右留边距，气泡圆角完整） ============ */
+  .messages {
+    flex: 1;                        /* 中间区域占满剩余空间，与底部输入栏严格分离 */
+    min-height: 0;                  /* ★关键：flex 子项允许收缩，overflow 滚动才能生效 */
+    overflow-y: auto;               /* 聊天区独立滚动 */
+    display: flex; flex-direction: column;
+    /* ★修复③关键：左右 padding 保证气泡不贴窗口内壁、圆角完整 */
+    padding: 14px var(--safe-pad);
+    gap: 12px;
+    background:
+      radial-gradient(circle at 85% 10%, rgba(255,182,215,.5), transparent 42%),
+      radial-gradient(circle at 10% 90%, rgba(182,166,255,.4), transparent 40%),
+      linear-gradient(180deg, #fff5fa, #f3eeff);
+  }
+  .messages::-webkit-scrollbar { width: 5px; }
+  .messages::-webkit-scrollbar-thumb { background: rgba(160,140,210,.4); border-radius: 3px; }
+
+  .msg {
+    display: flex; flex-direction: column;
+    max-width: 80%;
+  }
+  .msg.user { align-self: flex-end; align-items: flex-end; }
+  .msg.ai   { align-self: flex-start; align-items: flex-start; }
+  .bubble {
+    padding: 9px 14px;
+    border-radius: var(--bubble-radius);
+    font-size: 14px; line-height: 1.6; color: var(--text);
+    word-break: break-word; white-space: pre-wrap;
+    box-shadow: 0 3px 10px rgba(140,110,200,.12);
+  }
+  .bubble.user-b { background: var(--user-bubble); color: #fff; border-top-right-radius: 4px; }
+  .bubble.ai-b   { background: var(--ai-bubble); border-top-left-radius: 4px; }
+  .time { font-size: 10px; color: var(--text-sub); margin-top: 3px; }
+
+  /* ============ ④ 底部输入栏（★修复①：圆角完整展示的核心） ============ */
+  .inputbar {
+    flex: 0 0 auto;                 /* 固定在底部，不随聊天滚动 */
+    display: flex; align-items: center; gap: 10px;
+    /* ★修复①关键①：输入栏自身【不设背景、不设圆角】——如果它整条带背景，窗口底部圆角会把它的角裁掉 */
+    background: transparent;
+    /* ★修复①关键②：左右 + 底部留出安全距离，输入框整体内缩，大圆角完整可见；底部再叠加刘海安全区 */
+    padding: 10px var(--safe-pad) calc(var(--safe-pad) + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(255,255,255,.8);
+  }
+  .chat-input {
+    flex: 1;
+    height: 44px;
+    padding: 0 18px;
+    border: 2px solid rgba(255,255,255,.95);
+    border-radius: var(--input-radius);   /* ★修复①：输入框大圆角 */
+    background: #fff;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    box-shadow: 0 3px 12px rgba(140,110,200,.15);
+    transition: box-shadow .2s, border-color .2s;
+  }
+  .chat-input::placeholder { color: #c4bcd9; }
+  .chat-input:focus { border-color: var(--pink); box-shadow: 0 3px 16px rgba(255,143,192,.35); }
+  .send {
+    flex: 0 0 auto;
+    height: 44px; padding: 0 20px;
+    border: none; border-radius: 22px;
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: #fff; font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(255,143,192,.4);
+  }
+  .send:active { transform: scale(.95); }
+</style>
+</head>
+<body>
+<div class="window" id="app">
+  <!-- ① 标题栏 -->
+  <header class="titlebar">
+    <span class="title">🌸 二次元聊天室</span>
+    <button class="close" title="关闭">✕</button>
+  </header>
+
+  <!-- ② 顶部角色 Tab -->
+  <nav class="tabs" id="tabs">
+    <div class="tab active">🐳 小鲸娘</div>
+    <div class="tab">🐬 小鲸夜</div>
+    <div class="tab">🐢 海龟哥哥</div>
+  </nav>
+
+  <!-- ③ 聊天滚动区 -->
+  <main class="messages" id="messages">
+    <div class="msg ai">
+      <div class="bubble ai-b">呜哇~终于来找我玩啦！(｡•́︿•̀｡)</div>
+      <div class="time">21:00</div>
+    </div>
+    <div class="msg user">
+      <div class="bubble user-b">你好呀，今天想聊什么？(●'◡'●)</div>
+      <div class="time">21:01</div>
+    </div>
+  </main>
+
+  <!-- ④ 底部输入栏（★修复①：与窗口内壁留安全距离，圆角完整） -->
+  <footer class="inputbar">
+    <input class="chat-input" id="input" placeholder="和她说点什么…" enterkeyhint="send">
+    <button class="send" id="send">发送</button>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var messages = document.getElementById('messages');
+  var input = document.getElementById('input');
+  var sendBtn = document.getElementById('send');
+  var closeBtn = document.querySelector('.close');
+
+  /* 追加一条消息并滚动到底部 */
+  function addMsg(who, text) {
+    var m = document.createElement('div');
+    m.className = 'msg ' + (who === 'user' ? 'user' : 'ai');
+    var b = document.createElement('div');
+    b.className = 'bubble ' + (who === 'user' ? 'user-b' : 'ai-b');
+    b.textContent = text;
+    var t = document.createElement('div');
+    t.className = 'time';
+    var d = new Date();
+    t.textContent = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+    m.appendChild(b); m.appendChild(t);
+    messages.appendChild(m);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function send() {
+    var text = input.value.trim();
+    if (!text) return;
+    addMsg('user', text);
+    input.value = '';
+    setTimeout(function () { addMsg('ai', '嘿嘿，收到啦！(*≧▽≦)'); }, 600); // 模拟 AI 回复
+  }
+
+  sendBtn.addEventListener('click', send);
+  input.addEventListener('keydown', function (e) { if (e.key === 'Enter') send(); });
+  closeBtn.addEventListener('click', function () { document.getElementById('app').style.display = 'none'; });
+
+  /* 顶部 Tab 切换 */
+  var tabs = document.getElementById('tabs');
+  tabs.addEventListener('click', function (e) {
+    var t = e.target.closest('.tab');
+    if (!t) return;
+    [].forEach.call(tabs.children, function (c) { c.classList.remove('active'); });
+    t.classList.add('active');
+  });
+
+  /* ============ ★修复⑤：软键盘弹出适配 ============
+     visualViewport 高度 = 键盘弹出后剩余可视高度；
+     把窗口高度实时压到它以内，输入栏永远可见、不被遮挡 */
+  var app = document.getElementById('app');
+  var vv = window.visualViewport;
+  function fit() {
+    if (vv) {
+      app.style.height = Math.min(vv.height, 720) + 'px';
+      var bar = document.querySelector('.inputbar');
+      if (bar && bar.scrollIntoView) bar.scrollIntoView({ block: 'end' });
+    }
+  }
+  if (vv) {
+    vv.addEventListener('resize', fit);
+    vv.addEventListener('scroll', fit);
+  }
+  window.addEventListener('resize', fit);
+  fit();
+})();
+</script>
+</body>
+</html>
